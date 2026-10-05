@@ -240,13 +240,18 @@ if __name__ == '__main__':
     else:
       print(f'image dir = {args.image_dir}')
       print(f'save dir = {args.save_dir}')
-      imglist = os.listdir(args.image_dir)
+      image_extensions = ('.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff', '.webp')
+      imglist = sorted(
+          filename for filename in os.listdir(args.image_dir)
+          if os.path.isfile(os.path.join(args.image_dir, filename))
+          and filename.lower().endswith(image_extensions)
+      )
       num_images = len(imglist)
 
     print('Loaded Photo: {} images.'.format(num_images))
 
 
-    while (num_images >= 0):
+    while webcam_num >= 0 or num_images > 0:
         total_tic = time.time()
         if webcam_num == -1:
           num_images -= 1
@@ -256,11 +261,16 @@ if __name__ == '__main__':
           if not cap.isOpened():
             raise RuntimeError("Webcam could not open. Please check connection.")
           ret, frame = cap.read()
+          if not ret:
+            break
           im_in = np.array(frame)
         # Load the demo image
         else:
           im_file = os.path.join(args.image_dir, imglist[num_images])
           im_in = cv2.imread(im_file)
+          if im_in is None:
+            print('Skipping unreadable image: {}'.format(im_file))
+            continue
         # bgr
         im = im_in
 
