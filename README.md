@@ -288,11 +288,13 @@ The ten columns in each row are:
 | --- | --- | --- |
 | `0:4` | `boxes` | `[x1, y1, x2, y2]` in pixels in the original input image. `(x1, y1)` is the top-left corner and `(x2, y2)` is the bottom-right corner; this is not `[x, y, width, height]`. |
 | `4` | `score` | Confidence for the detection’s class, from 0 to 1. |
-| `5` | `state` | Hand contact-state class: `0` no contact, `1` self-contact, `2` contact with another person, `3` portable object, `4` stationary/non-portable object. |
+| `5` | `contact_state` | Integer class ID describing what the detected hand is touching (or not touching): `0` no contact; `1` self-contact; `2` contact with another person; `3` contact with a portable object; `4` contact with a stationary/non-portable object. |
 | `6:9` | `offset_vector` | `[m, vx, vy]`: a hand-to-object association vector, factored into magnitude `m` and unit direction `(vx, vy)`. In this implementation, the object-center estimate is `hand_box_center + 10000 * m * (vx, vy)` in image pixels. |
 | `9` | `left/right` | Hand side: `0` left, `1` right. |
 
 The `state`, `offset_vector`, and `left/right` fields in `obj_dets` are included to keep both arrays the same width; they are not trained for objects and should be ignored. Use only the object box and score from `obj_dets`. The auxiliary fields in `hand_dets` carry the hand’s contact state, the associated-object direction, and its side.
+
+In plain terms, **self-contact** means the hand touches the same person’s body; **another person** means it touches someone else; a **portable object** can be moved (for example, a cup); and a **stationary/non-portable object** is fixed in place (for example, furniture). The contact-state value is not an object category or an action label. When `--print_detections` is enabled, hand state IDs are printed with their meanings; object state predictions are untrained and marked to be ignored.
 
 To print these arrays for each image while running the demo, pass `--print_detections`:
 ```bash

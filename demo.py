@@ -384,6 +384,13 @@ if __name__ == '__main__':
 
         if args.print_detections:
           print("\nDetections for {}:".format(detection_source))
+          contact_state_names = (
+              "no contact",
+              "self-contact",
+              "contact with another person",
+              "contact with a portable object",
+              "contact with a stationary/non-portable object",
+          )
           for name, detections in (("hand_dets", hand_dets), ("obj_dets", obj_dets)):
             print("{}:".format(name))
             if detections is None:
@@ -391,7 +398,14 @@ if __name__ == '__main__':
               continue
             print("- boxes [x1, y1, x2, y2]:\n{}".format(detections[:, :4]))
             print("- score:\n{}".format(detections[:, 4]))
-            print("- state:\n{}".format(detections[:, 5]))
+            if name == "hand_dets":
+              decoded_states = [
+                  "{} ({})".format(int(state_id), contact_state_names[int(state_id)])
+                  for state_id in detections[:, 5]
+              ]
+              print("- contact_state [class_id (meaning)]:\n{}".format(decoded_states))
+            else:
+              print("- contact_state (untrained for objects; ignore):\n{}".format(detections[:, 5]))
             print("- offset_vector [m, vx, vy]:\n{}".format(detections[:, 6:9]))
             print("- left/right (0=left, 1=right):\n{}".format(detections[:, 9]))
               
