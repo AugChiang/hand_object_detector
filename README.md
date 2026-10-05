@@ -278,11 +278,27 @@ CUDA_VISIBLE_DEVICES=0 python demo.py --cuda --checkepoch=xxx --checkpoint=xxx
 ```
 
 
-**Params to save detected results** in demo.py you may need for your task:
-* hand_dets: detected results for hands, [boxes(4), score(1), state(1), offset_vector(3), left/right(1)]
-* obj_dets: detected results for object, [boxes(4), score(1), <em>state(1), offset_vector(3), left/right(1)</em>]
+### Detection arrays
 
-We did **not** train the contact_state, offset_vector and hand_side part for objects. We keep them just to make the data format consistent. So, only use the bbox and confidence score infomation for objects.  
+The output arrays follow the hand and object predictions described in Section 4.1 of the [100DOH paper](https://openaccess.thecvf.com/content_CVPR_2020/html/Shan_Understanding_Human_Hands_in_Contact_at_Internet_Scale_CVPR_2020_paper.html). Each array has shape `(N, 10)`: one row per detection that remains after the confidence threshold and non-maximum suppression. `hand_dets` contains hand detections; `obj_dets` contains contacted-object box detections. A row in one array is **not** paired with the row at the same index in the other array.
+
+The ten columns in each row are:
+
+| Columns | Field | Meaning |
+| --- | --- | --- |
+| `0:4` | `boxes` | `[x1, y1, x2, y2]` in pixels in the original input image. `(x1, y1)` is the top-left corner and `(x2, y2)` is the bottom-right corner; this is not `[x, y, width, height]`. |
+| `4` | `score` | Confidence for the detection’s class, from 0 to 1. |
+| `5` | `state` | Hand contact-state class: `0` no contact, `1` self-contact, `2` contact with another person, `3` portable object, `4` stationary/non-portable object. |
+| `6:9` | `offset_vector` | `[m, vx, vy]`: a hand-to-object association vector, factored into magnitude `m` and unit direction `(vx, vy)`. In this implementation, the object-center estimate is `hand_box_center + 10000 * m * (vx, vy)` in image pixels. |
+| `9` | `left/right` | Hand side: `0` left, `1` right. |
+
+The `state`, `offset_vector`, and `left/right` fields in `obj_dets` are included to keep both arrays the same width; they are not trained for objects and should be ignored. Use only the object box and score from `obj_dets`. The auxiliary fields in `hand_dets` carry the hand’s contact state, the associated-object direction, and its side.
+
+To print these arrays for each image while running the demo, pass `--print_detections`:
+```bash
+python demo.py --cuda --checksession 1 --checkepoch 8 --checkpoint 89999 --print_detections
+```
+Each row is one detection with fields in the order listed above; missing detections are printed as `None`.
 
 **Matching**:
 
