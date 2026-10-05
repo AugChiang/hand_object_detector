@@ -1,4 +1,4 @@
-# Hand Object Detector 
+# Hand Object Detector
 This is the code for our paper *Understanding Human Hands in Contact at Internet Scale* (CVPR 2020, **Oral**).
 
 Dandan Shan, Jiaqi Geng*, Michelle Shu*, David F. Fouhey
@@ -17,49 +17,53 @@ More information can be found at our:
 
 
 ## Prerequisites
-[New] Now, it is compatible with newer pytorch version. Thanks [ajonnavittula](https://github.com/ajonnavittula) and [relh](https://github.com/relh) for helping figure out the compile files.
-Create a conda env called handobj_new, install pytorch-1.12.1, cuda-11.3:
-* python=3.8
-* cudatoolkit=11.3
-* pytorch=1.12.1
-```
-conda create --name handobj_new python=3.8
-conda activate handobj_new
-conda install pytorch==1.12.1 torchvision==0.13.1 torchaudio==0.12.1 cudatoolkit=11.3 -c pytorch
-```
 
+The recommended setup uses Python 3.12, PyTorch 2.7.1, Torchvision 0.22.1, and CUDA 12.8. The demo and extension build were verified on Linux with PyTorch 2.7.1 (`cu126`) and the CUDA 12.8 Toolkit (`nvcc`). The CUDA toolkit is needed to compile the custom ROI and NMS operators; the NVIDIA driver must support the selected CUDA runtime. PyTorch also provides matching `cu128` wheels, installed with the command below.
 
+Create and activate a Conda environment, then install the CUDA 12.8 PyTorch wheels:
 
-[Old, deprecated] Create a conda env called handobj, install pytorch-1.0.1, cuda-10.0:
-* Python 3.6
-* Pytorch 1.0
-* CUDA 10.0
-```
-conda create --name handobj python=3.6
+```bash
+conda create --name handobj python=3.12 pip
 conda activate handobj
-conda install pytorch=1.0.1 torchvision cudatoolkit=10.0 -c pytorch
+python -m pip install torch==2.7.1 torchvision==0.22.1 --index-url https://download.pytorch.org/whl/cu128
 ```
+
+The `requirements.txt` file contains the remaining Python libraries and intentionally leaves PyTorch/Torchvision to the command above so pip does not replace the CUDA-enabled wheels with a different build.
 
 
 ## Preparation
 
-First of all, clone the code
+First, clone this fork:
 ```
-git clone https://github.com/ddshan/hand_object_detector && cd hand_object_detector
+git clone https://github.com/AugChiang/hand_object_detector && cd hand_object_detector
 ```
 
 
 ## Environment & Compilation
 
-Install all the python dependencies using pip:
+Install the remaining Python dependencies:
 ```
-pip install -r requirements.txt
+python -m pip install -r requirements.txt
 ```
 
-Compile the cuda dependencies using following simple commands:
+Compile and place the custom CUDA/C++ extension in the source package:
 ```
 cd lib
-python setup.py build develop
+python setup.py build_ext --inplace
+cd ..
+```
+
+Build the extension from an environment where the GPU is visible and `nvcc` from CUDA 12.8 is on `PATH`. This command builds in place, which works with the repository's `_init_paths.py` and avoids an isolated editable install that cannot find PyTorch during extension compilation. Re-run it after changing PyTorch, CUDA, or the extension sources.
+
+Check the installed PyTorch CUDA runtime and compiler before building:
+```bash
+python -c "import torch; print(torch.__version__, torch.version.cuda, torch.cuda.is_available())"
+nvcc --version
+```
+
+To run the included image demo after placing a checkpoint in the directory layout described in the Demo section:
+```bash
+python demo.py --cuda --checksession 1 --checkepoch 8 --checkpoint 89999
 ```
 
 <!-- You will meet some errors about coco dataset: (not the best but the easiest solution)
