@@ -107,6 +107,8 @@ def parse_args():
   parser.add_argument('--thresh_obj', default=0.5,
                       type=float,
                       required=False)
+  parser.add_argument('--print_detections', action='store_true',
+                      help='print hand_dets and obj_dets for each image')
 
   args = parser.parse_args()
   return args
@@ -264,6 +266,7 @@ if __name__ == '__main__':
           if not ret:
             break
           im_in = np.array(frame)
+          detection_source = 'webcam {}'.format(webcam_num)
         # Load the demo image
         else:
           im_file = os.path.join(args.image_dir, imglist[num_images])
@@ -271,6 +274,7 @@ if __name__ == '__main__':
           if im_in is None:
             print('Skipping unreadable image: {}'.format(im_file))
             continue
+          detection_source = imglist[num_images]
         # bgr
         im = im_in
 
@@ -377,6 +381,19 @@ if __name__ == '__main__':
                 obj_dets = cls_dets.cpu().numpy()
               if pascal_classes[j] == 'hand':
                 hand_dets = cls_dets.cpu().numpy()
+
+        if args.print_detections:
+          print("\nDetections for {}:".format(detection_source))
+          for name, detections in (("hand_dets", hand_dets), ("obj_dets", obj_dets)):
+            print("{}:".format(name))
+            if detections is None:
+              print("None")
+              continue
+            print("- boxes [x1, y1, x2, y2]:\n{}".format(detections[:, :4]))
+            print("- score:\n{}".format(detections[:, 4]))
+            print("- state:\n{}".format(detections[:, 5]))
+            print("- offset_vector [m, vx, vy]:\n{}".format(detections[:, 6:9]))
+            print("- left/right (0=left, 1=right):\n{}".format(detections[:, 9]))
               
         if vis:
           # visualization
