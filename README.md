@@ -277,6 +277,16 @@ Put your images in the **images/** folder and run the command. A new folder **im
 CUDA_VISIBLE_DEVICES=0 python demo.py --cuda --checkepoch=xxx --checkpoint=xxx
 ```
 
+### Video Inference
+
+`inference.py` runs Faster R-CNN on video frames in batches and writes an annotated video. Download a checkpoint from the model table above and place it in the checkpoint directory layout shown above. For example, with `faster_rcnn_1_8_89999.pth` at `models/res101_handobj_100K/pascal_voc/`, run:
+
+```bash
+python inference.py --video path/to/video.mp4 --checkpoint 89999 --cuda --batch_size 4
+```
+
+The output is `video_det.mp4` by default. Use `--output path/to/output.mp4` to choose another path. `--batch_size` (or `--bs`) sets how many frames are processed in one model inference; the final group may contain fewer frames. For CPU inference, omit `--cuda`.
+
 
 ### Detection arrays
 
