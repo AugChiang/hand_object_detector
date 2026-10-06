@@ -142,8 +142,12 @@ class _fasterRCNN(nn.Module):
         
         rois_padded[:,:,3] = rois_padded[:,:,3] + ratio*rois_width
         rois_padded[:,:,4] = rois_padded[:,:,4] + ratio*rois_height
-        rois_padded[:,:,3][rois_padded[:,:,3] > im_info[:,0]] = im_info[:,0]
-        rois_padded[:,:,4][rois_padded[:,:,4] > im_info[:,1]] = im_info[:,1]
+        # im_info is [batch, (height, width, scale)]; add a proposal axis
+        # so each image's bounds broadcast across its ROIs.
+        max_x = im_info[:, 1:2]
+        max_y = im_info[:, 0:1]
+        rois_padded[:, :, 3] = torch.minimum(rois_padded[:, :, 3], max_x)
+        rois_padded[:, :, 4] = torch.minimum(rois_padded[:, :, 4], max_y)
         return rois_padded
 
     def _init_weights(self):
